@@ -1,0 +1,5 @@
+C:\Users\arang\source\repos\Sim-Connect-Module\obj\Release\Sim-Connect-Module.csproj.CoreCompileInputs.cache
+C:\Users\arang\source\repos\Sim-Connect-Module\bin\Release\Sim-Connect-Module.dll
+C:\Users\arang\source\repos\Sim-Connect-Module\bin\Release\Sim-Connect-Module.pdb
+C:\Users\arang\source\repos\Sim-Connect-Module\obj\Release\Sim-Connect-Module.dll
+C:\Users\arang\source\repos\Sim-Connect-Module\obj\Release\Sim-Connect-Module.pdb
