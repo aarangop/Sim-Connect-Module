@@ -4,7 +4,7 @@ using LockheedMartin.Prepar3D.SimConnect;
 
 namespace SimConnectModule
 {
-    public static class SimConnectManaged
+    public static class ScManagedLib
     {
         #region Fields
 
@@ -27,13 +27,15 @@ namespace SimConnectModule
 
         public static int WM_USER_SIMCONNECT { get => _WM_USER_SIMCONNECT; }
 
+        public static SimConnect SimConnectInstance { get => _simConnect; }
+
         #endregion
 
         #endregion
 
         #region Events
 
-        public static event EventHandler<SCRecvEventArgs> OnRecvData;
+        public static event EventHandler<ScRecvArgs> OnRecvData;
 
         public delegate void OnSimConnectRecv();
 
@@ -53,9 +55,12 @@ namespace SimConnectModule
         #endregion
 
         #region Event Handlers
+
         private static void _simConnect_OnRecvSimobjectDataBytype(SimConnect sender, SIMCONNECT_RECV_SIMOBJECT_DATA_BYTYPE data)
         {
-            SCRecvEventArgs args = new SCRecvEventArgs(data);
+            ScData.ProcessDataRecv(data);
+
+            ScRecvArgs args = new ScRecvArgs(data);
 
             OnRecvData?.Invoke(sender, args);
         }
@@ -63,13 +68,20 @@ namespace SimConnectModule
         public static void _simConnect_OnRecvOpen(SimConnect sender, SIMCONNECT_RECV_OPEN data)
         {
             _connStatus = SCConnectionStatus.Connected;
+
+            // Register all available data structs when the connection is opened.
+            ScData.RegisterDataStructs(_simConnect);
             OnRecvOpen?.Invoke();
         }
 
-        public static void _simConnect_OnRecvQuit(SimConnect sender, SIMCONNECT_RECV data)
+        public async static void _simConnect_OnRecvQuit(SimConnect sender, SIMCONNECT_RECV data)
         {
+
+            CloseConnection();
             _connStatus = SCConnectionStatus.Disconnected;
             OnRecvQuit?.Invoke();
+
+            await Task.Run(async () => await AttemptConnection());
         }
 
         public static void SetWindowHandle(IntPtr handle)
@@ -81,8 +93,7 @@ namespace SimConnectModule
 
         #region Public Methods
 
-
-        public static async void AttemptConnection()
+        public static async Task AttemptConnection()
         {
             while (_simConnect == null)
             {
@@ -99,6 +110,7 @@ namespace SimConnectModule
 
                         // catch a simobject data request
                         _simConnect.OnRecvSimobjectDataBytype += new SimConnect.RecvSimobjectDataBytypeEventHandler(_simConnect_OnRecvSimobjectDataBytype);
+
                     }
                     catch (Exception e)
                     {
@@ -110,7 +122,10 @@ namespace SimConnectModule
         }
         public static void ReceiveMessage()
         {
-            _simConnect.ReceiveMessage();
+            if (_simConnect != null)
+            {
+                _simConnect.ReceiveMessage();
+            }
         }
 
         public static void CloseConnection()
@@ -120,6 +135,13 @@ namespace SimConnectModule
                 _simConnect.Dispose();
                 _simConnect = null;
             }
+        }
+
+        public static void RegisterDataStruct()
+        {
+            ScData.RegisterStruct(_simConnect, SIMVAR_CATEGORY.ENGINE_DATA);
+
+            _simConnect.RequestDataOnSimObjectType(SIMVAR_CATEGORY.ENGINE_DATA, SIMVAR_CATEGORY.ENGINE_DATA, 0, SIMCONNECT_SIMOBJECT_TYPE.USER);
         }
 
         #endregion
