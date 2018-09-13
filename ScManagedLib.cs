@@ -35,7 +35,7 @@ namespace SimConnectModule
 
         #region Events
 
-        public static event EventHandler<ScRecvArgs> OnRecvData;
+        public static event EventHandler<SimConnectDataRecvArgs> OnRecvData;
 
         public delegate void OnSimConnectRecv();
 
@@ -60,17 +60,15 @@ namespace SimConnectModule
         {
             ScData.ProcessDataRecv(data);
 
-            ScRecvArgs args = new ScRecvArgs(data);
+            SimConnectDataRecvArgs args = new SimConnectDataRecvArgs(data);
 
             OnRecvData?.Invoke(sender, args);
         }
 
-        public static void _simConnect_OnRecvOpen(SimConnect sender, SIMCONNECT_RECV_OPEN data)
+        public async static void _simConnect_OnRecvOpen(SimConnect sender, SIMCONNECT_RECV_OPEN data)
         {
             _connStatus = SCConnectionStatus.Connected;
-
-            // Register all available data structs when the connection is opened.
-            ScData.RegisterDataStructs(_simConnect);
+            await RegisterAllStructs();
             OnRecvOpen?.Invoke();
         }
 
@@ -137,11 +135,21 @@ namespace SimConnectModule
             }
         }
 
-        public static void RegisterDataStruct()
+        public static async Task RegisterDataStruct(SIMVAR_CATEGORY category)
         {
-            ScData.RegisterStruct(_simConnect, SIMVAR_CATEGORY.ENGINE_DATA);
+            await ScData.RegisterStruct(_simConnect, category);
+        }
 
-            _simConnect.RequestDataOnSimObjectType(SIMVAR_CATEGORY.ENGINE_DATA, SIMVAR_CATEGORY.ENGINE_DATA, 0, SIMCONNECT_SIMOBJECT_TYPE.USER);
+        public async static Task RegisterAllStructs()
+        {
+            await ScData.RegisterStruct(_simConnect, SIMVAR_CATEGORY.ENGINE_DATA);
+            await ScData.RegisterStruct(_simConnect, SIMVAR_CATEGORY.AIRCRAFT_MISCELANEOUS);
+            await ScData.RegisterStruct(_simConnect, SIMVAR_CATEGORY.CONTROLS);
+        }
+
+        public static void RequestSimData(SIMVAR_CATEGORY category)
+        {
+            _simConnect.RequestDataOnSimObjectType(category, category, 0, SIMCONNECT_SIMOBJECT_TYPE.USER);
         }
 
         #endregion

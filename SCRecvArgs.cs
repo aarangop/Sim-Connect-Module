@@ -7,11 +7,11 @@ using System.Threading.Tasks;
 
 namespace SimConnectModule
 {
-    public class ScRecvArgs
+    public class SimConnectDataRecvArgs
     {
         public SIMCONNECT_RECV RecvData;
 
-        public ScRecvArgs(SIMCONNECT_RECV recvData)
+        public SimConnectDataRecvArgs(SIMCONNECT_RECV recvData)
         {
             RecvData = recvData;
         }

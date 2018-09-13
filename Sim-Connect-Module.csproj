@@ -108,12 +108,17 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ProcedureManager.cs" />
     <Compile Include="ScDataEnums.cs" />
-    <Compile Include="ScDataStructs.cs" />
+    <Compile Include="ScData\ScData_Constructor.cs" />
+    <Compile Include="ScData\ScData_Methods.cs" />
+    <Compile Include="ScData\ScData_ProcessDataRecv.cs" />
+    <Compile Include="ScData\ScData_Structs.cs" />
+    <Compile Include="ScData\ScData_PropertyDefs.cs" />
     <Compile Include="ScRecvArgs.cs" />
     <Compile Include="ScManagedLib.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ScData.cs" />
+    <Compile Include="ScData\ScData_Members.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Pilot-Assist-Lib\Pilot-Assist-Lib\Pilot-Assist-Lib.csproj">
