@@ -1,4 +1,5 @@
-﻿using PilotAssistDll.Models;
+﻿using PilotAssistDll.Helpers;
+using PilotAssistDll.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,6 +18,8 @@ namespace SimConnectModule
 
         private static bool _procedureCompleted;
         private static bool _stopProcedureLoop = false;
+
+        private static MqttManager _mqttManager;
 
         #endregion
 
@@ -59,6 +62,16 @@ namespace SimConnectModule
                 _activeItemValue = value;
                 OnActiveItemValueChanged(_activeItem, _activeItemValue);
             }
+        }
+
+        #endregion
+
+        #region Constructor
+
+        static ProcedureManager()
+        {
+            // Subscribe to mqtt receive events
+            
         }
 
         #endregion
@@ -134,6 +147,14 @@ namespace SimConnectModule
             ActiveItem = null;
 
             return true;
+        }
+
+        private static void SetMqttManager(MqttManager mqttManager)
+        {
+            if (mqttManager != null)
+            {
+                _mqttManager = mqttManager;
+            }
         }
 
         #endregion
