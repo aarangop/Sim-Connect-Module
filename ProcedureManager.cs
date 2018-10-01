@@ -1,9 +1,13 @@
-﻿using PilotAssistDll.Helpers;
+﻿using MongoDB.Bson;
+using PilotAssistDll.Helpers;
 using PilotAssistDll.Models;
+using PilotAssistModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
+using uPLibrary.Networking.M2Mqtt.Messages;
 
 namespace SimConnectModule
 {
@@ -18,8 +22,7 @@ namespace SimConnectModule
 
         private static bool _procedureCompleted;
         private static bool _stopProcedureLoop = false;
-
-        private static MqttManager _mqttManager;
+        private static string _mqttClientId;
 
         #endregion
 
@@ -71,12 +74,72 @@ namespace SimConnectModule
         static ProcedureManager()
         {
             // Subscribe to mqtt receive events
-            
+            MqttManager.ConnectionStatusChanged += MqttManager_ConnectionStatusChanged;
+            OnActiveItemChanged += ProcedureManager_OnActiveItemChanged;
         }
 
         #endregion
 
         #region Methods
+
+        private static void MqttManager_ConnectionStatusChanged(object sender, ConnectionChangedEventArgs e)
+        {
+            if (MqttManager.Client == null) return;
+
+            if (_mqttClientId != MqttManager.Client.ClientId )
+            {
+                _mqttClientId = MqttManager.Client.ClientId;
+                MqttManager.Client.MqttMsgPublishReceived += Client_MqttMsgPublishReceived;
+            }
+        }
+
+        private static void ProcedureManager_OnActiveItemChanged(ProcedureItem procedureItem)
+        {
+            if (ActiveProcedure != null)
+            {
+                ActiveItem.SetModelStruct();
+                MqttManager.PublishDataStruct(ActiveItem.Model, MqttTopics.ServerPublishTopics[MqttTopics.ServerPublish.ActiveProcedureItem]);
+            }
+        }
+
+        /// <summary>
+        /// Handles data received by the mqtt client.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private async static void Client_MqttMsgPublishReceived(object sender, MqttMsgPublishEventArgs e)
+        {
+            if (e.Topic == MqttTopics.ServerReceiveTopics[MqttTopics.ServerReceive.RequestAvailableProcedures])
+            {
+                SendAvailableProcedures();
+                return;
+            }
+
+            if (e.Topic == MqttTopics.ServerReceiveTopics[MqttTopics.ServerReceive.RequestProcedureStart])
+            {
+                string procedureId = Encoding.ASCII.GetString(e.Message);
+                Procedure activeProcedure = Procedure.AllItems.Find(pr => pr.Id.ToString() == procedureId);
+
+                if (activeProcedure != null)
+                {
+                    await ActivateProcedure(activeProcedure);
+                }
+                return;
+            }
+        }
+
+        /// <summary>
+        /// Send serialized models of each available procedure to the Mqtt broker.
+        /// </summary>
+        private static void SendAvailableProcedures()
+        {
+            foreach(Procedure p in Procedure.AllItems)
+            {
+                p.SetModelStruct();
+                byte[] msg = ModelSerializer.StrucToByteArray(p.Model);
+                MqttManager.Client.Publish(MqttTopics.ServerPublishTopics[MqttTopics.ServerPublish.AvailableProcedures], msg);
+            }
+        }
 
         public async static Task ActivateProcedure(Procedure procedure)
         {
@@ -113,6 +176,7 @@ namespace SimConnectModule
 
         private static async Task<bool> StartProcedureLoop()
         {
+            await NextItem();
 
             while (!_stopProcedureLoop && !_procedureCompleted)
             {
@@ -135,26 +199,34 @@ namespace SimConnectModule
 
         private static async Task<bool> NextItem()
         {
-            await Task.Delay(2000);
-
-            _activeItemIndex++;
-
-            if (_activeItemIndex < ActiveProcedure.Items.Count)
+            if (_activeItemIndex == 0)
             {
-                ActiveItem = ActiveProcedure.Items[_activeItemIndex];
-                return false;
-            }
-            ActiveItem = null;
+                ActiveItem = ActiveProcedure.Items[0];
 
-            return true;
+                return false;
+            } else
+            {
+                await Task.Delay(2000);
+
+                _activeItemIndex++;
+
+                if (_activeItemIndex < ActiveProcedure.Items.Count)
+                {
+                    ActiveItem = ActiveProcedure.Items[_activeItemIndex];
+
+                    return false;
+                }
+
+                ActiveItem = null;
+
+                return true;
+            }
         }
 
-        private static void SetMqttManager(MqttManager mqttManager)
+        private static void SendActiveItem()
         {
-            if (mqttManager != null)
-            {
-                _mqttManager = mqttManager;
-            }
+            ActiveItem.SetModelStruct();
+            MqttManager.PublishDataStruct<ProcedureItemStruct>(ActiveItem.Model, MqttTopics.ServerPublishTopics[MqttTopics.ServerPublish.ActiveProcedureItem]);
         }
 
         #endregion

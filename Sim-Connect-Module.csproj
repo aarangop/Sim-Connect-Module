@@ -82,6 +82,7 @@
     <Reference Include="LockheedMartin.Prepar3D.SimConnect">
       <HintPath>D:\Programs\P3D SDK\lib\SimConnect\managed\LockheedMartin.Prepar3D.SimConnect.dll</HintPath>
     </Reference>
+    <Reference Include="M2Mqtt.Net, Version=4.3.0.0, Culture=neutral, PublicKeyToken=null" />
     <Reference Include="MongoDB.Bson, Version=2.7.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\Pilot-Assist-Suite\Pilot-Assist-Desktop\packages\MongoDB.Bson.2.7.0\lib\net45\MongoDB.Bson.dll</HintPath>
     </Reference>
@@ -124,6 +125,10 @@
     <ProjectReference Include="..\Pilot-Assist-Lib\Pilot-Assist-Lib\Pilot-Assist-Lib.csproj">
       <Project>{3DC5274A-4B65-425E-B3FC-7E2A6F947E2E}</Project>
       <Name>Pilot-Assist-Lib</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Pilot-Assist-Models\Pilot-Assist-Models\Pilot-Assist-Models.csproj">
+      <Project>{F7E210D0-5400-4F3A-A91C-3BD9428C6073}</Project>
+      <Name>Pilot-Assist-Models</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
