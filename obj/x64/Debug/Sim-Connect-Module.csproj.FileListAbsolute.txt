@@ -11,7 +11,6 @@ C:\Users\arang\source\repos\Sim-Connect-Module\bin\x64\Debug\MongoDB.Bson.dll
 C:\Users\arang\source\repos\Sim-Connect-Module\bin\x64\Debug\MongoDB.Driver.dll
 C:\Users\arang\source\repos\Sim-Connect-Module\bin\x64\Debug\Pilot-Assist-Models.dll
 C:\Users\arang\source\repos\Sim-Connect-Module\bin\x64\Debug\MongoDB.Driver.Core.dll
-C:\Users\arang\source\repos\Sim-Connect-Module\bin\x64\Debug\M2Mqtt.Net.dll
 C:\Users\arang\source\repos\Sim-Connect-Module\bin\x64\Debug\DnsClient.dll
 C:\Users\arang\source\repos\Sim-Connect-Module\bin\x64\Debug\System.Buffers.dll
 C:\Users\arang\source\repos\Sim-Connect-Module\bin\x64\Debug\Pilot-Assist-Lib.pdb
