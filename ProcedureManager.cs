@@ -17,6 +17,7 @@ namespace SimConnectModule
 
         private static Procedure _activeProcedure;
         private static ProcedureItem _activeItem;
+        private static ProcedureItem _latestItemSent;
         private static object _activeItemValue;
         private static int _activeItemIndex;
 
@@ -33,6 +34,7 @@ namespace SimConnectModule
         public delegate void OnActiveItemValueChangedDelegate(ProcedureItem procedureItem, object newValue);
 
         public static event OnActiveProcedureChangedDelegate OnActiveProcedureChanged;
+        public static event OnActiveProcedureChangedDelegate OnProcedureCompleted;
         public static event OnActiveItemChangedDelegate OnActiveItemChanged;
         public static event OnActiveItemValueChangedDelegate OnActiveItemValueChanged;
 
@@ -75,12 +77,21 @@ namespace SimConnectModule
         {
             // Subscribe to mqtt receive events
             MqttManager.ConnectionStatusChanged += MqttManager_ConnectionStatusChanged;
-            OnActiveItemChanged += ProcedureManager_OnActiveItemChanged;
+            OnProcedureCompleted += NotifyProcedureCompleted;
         }
 
         #endregion
 
         #region Methods
+
+        private static void NotifyProcedureCompleted(Procedure procedure)
+        {
+            procedure.SetModelStruct();
+
+            byte[] msg = ModelSerializer.StrucToByteArray(procedure.Model);
+
+            MqttManager.Client.Publish(MqttTopics.ServerPublishTopics[MqttTopics.ServerPublish.ProcedureCompleted], msg);
+        }
 
         private static void MqttManager_ConnectionStatusChanged(object sender, ConnectionChangedEventArgs e)
         {
@@ -90,15 +101,6 @@ namespace SimConnectModule
             {
                 _mqttClientId = MqttManager.Client.ClientId;
                 MqttManager.Client.MqttMsgPublishReceived += Client_MqttMsgPublishReceived;
-            }
-        }
-
-        private static void ProcedureManager_OnActiveItemChanged(ProcedureItem procedureItem)
-        {
-            if (ActiveProcedure != null)
-            {
-                ActiveItem.SetModelStruct();
-                MqttManager.PublishDataStruct(ActiveItem.Model, MqttTopics.ServerPublishTopics[MqttTopics.ServerPublish.ActiveProcedureItem]);
             }
         }
 
@@ -117,8 +119,10 @@ namespace SimConnectModule
 
             if (e.Topic == MqttTopics.ServerReceiveTopics[MqttTopics.ServerReceive.RequestProcedureStart])
             {
-                string procedureId = Encoding.ASCII.GetString(e.Message);
-                Procedure activeProcedure = Procedure.AllItems.Find(pr => pr.Id.ToString() == procedureId);
+                ProcedureStruct procedure = ModelSerializer.ByteArrayToStruct<ProcedureStruct>(e.Message);
+                ObjectId procedureId = new ObjectId(procedure.Id);
+
+                Procedure activeProcedure = Procedure.AllItems.Find(pr => ObjectId.Equals(procedureId, pr.Id));
 
                 if (activeProcedure != null)
                 {
@@ -154,17 +158,22 @@ namespace SimConnectModule
 
             _procedureCompleted = false;
 
-            ActiveItem = _activeProcedure.Items[_activeItemIndex];
-
-            IEnumerable<SIMVAR_CATEGORY> categories = ActiveProcedure.Items.Select(x => (SIMVAR_CATEGORY)x.SimVar.Category).Distinct();
-
-            // Register all the data structs for each sim var category in the items list.
-            foreach (SIMVAR_CATEGORY cat in categories)
+            try
             {
-                await ScManagedLib.RegisterDataStruct(cat);
-            }
+                IEnumerable<SIMVAR_CATEGORY> categories = ActiveProcedure.Items.Select(x => (SIMVAR_CATEGORY)x.SimVar.Category).Distinct();
 
-            await StartProcedureLoop();
+                // Register all the data structs for each sim var category in the items list.
+                foreach (SIMVAR_CATEGORY cat in categories)
+                {
+                    await ScManagedLib.RegisterDataStruct(cat);
+                }
+
+                await StartProcedureLoop();
+            }
+            catch(Exception e)
+            {
+
+            }
         }
 
         public static void AbortActiveProcedure()
@@ -176,7 +185,8 @@ namespace SimConnectModule
 
         private static async Task<bool> StartProcedureLoop()
         {
-            await NextItem();
+            _activeItemIndex = 0;
+            ActiveItem = ActiveProcedure.Items[_activeItemIndex];
 
             while (!_stopProcedureLoop && !_procedureCompleted)
             {
@@ -184,10 +194,22 @@ namespace SimConnectModule
                 
                 if (_activeItem.SimVar.Assert(_activeItem.Target))
                 {
-                    _procedureCompleted = await NextItem();
+                    if (_activeItemIndex == ActiveProcedure.Items.Count - 1)
+                    {
+                        _procedureCompleted = true;
+                        OnProcedureCompleted?.Invoke(ActiveProcedure);
+                    }
+                    else
+                    {
+                        ActiveItem = ActiveProcedure.Items[++_activeItemIndex];
+                        await Task.Delay(1000);
+                        SendActiveItem();
+                    }
                 }
 
-                await Task.Delay(100);
+                // Lower the frequency of the loop to avoid false positives,
+                // For example if the thrust lever passes through the desired target value.
+                await Task.Delay(500);
             }
 
             _stopProcedureLoop = false;
@@ -197,36 +219,14 @@ namespace SimConnectModule
             return false;
         }
 
-        private static async Task<bool> NextItem()
-        {
-            if (_activeItemIndex == 0)
-            {
-                ActiveItem = ActiveProcedure.Items[0];
-
-                return false;
-            } else
-            {
-                await Task.Delay(2000);
-
-                _activeItemIndex++;
-
-                if (_activeItemIndex < ActiveProcedure.Items.Count)
-                {
-                    ActiveItem = ActiveProcedure.Items[_activeItemIndex];
-
-                    return false;
-                }
-
-                ActiveItem = null;
-
-                return true;
-            }
-        }
-
         private static void SendActiveItem()
         {
-            ActiveItem.SetModelStruct();
-            MqttManager.PublishDataStruct<ProcedureItemStruct>(ActiveItem.Model, MqttTopics.ServerPublishTopics[MqttTopics.ServerPublish.ActiveProcedureItem]);
+            if (_latestItemSent != ActiveItem)
+            {
+                ActiveItem.SetModelStruct();
+                MqttManager.PublishDataStruct<ProcedureItemStruct>(ActiveItem.Model, MqttTopics.ServerPublishTopics[MqttTopics.ServerPublish.ActiveProcedureItem]);
+                _latestItemSent = ActiveItem;
+            }
         }
 
         #endregion
