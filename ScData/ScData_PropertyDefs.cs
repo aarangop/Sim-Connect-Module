@@ -1,4 +1,5 @@
 ﻿using LockheedMartin.Prepar3D.SimConnect;
+using System;
 using System.Collections.Generic;
 
 namespace SimConnectModule

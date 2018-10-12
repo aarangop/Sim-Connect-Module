@@ -139,5 +139,16 @@ namespace SimConnectModule
 
             return retType;
         }
+
+        internal static void RequestDataAllDataStructs(SimConnect sc, int userId)
+        {
+            foreach(KeyValuePair<SIMVAR_CATEGORY, bool> category in _registeredDataStructs)
+            {
+                if (category.Value)
+                {
+                    sc.RequestDataOnSimObject(category.Key, category.Key, SimConnect.SIMCONNECT_OBJECT_ID_USER, SIMCONNECT_PERIOD.SIM_FRAME, SIMCONNECT_DATA_REQUEST_FLAG.DEFAULT, 0, 0, 0);
+                }
+            }
+        }
     }
 }

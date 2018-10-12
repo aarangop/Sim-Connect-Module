@@ -27,6 +27,12 @@ namespace SimConnectModule
         /// </summary>
         public static Dictionary<string, SimulationVariable> MonitoredSimVars { get => _monitoredSimVars; }
 
+        /// <summary>
+        /// Dictionary with boolean values that indicate whether a SIMVAR_CATEGORY and
+        /// its corresponding data has been registered on SimConnect.
+        /// </summary>
+        public static Dictionary<SIMVAR_CATEGORY, bool> RegisteredDataStructs { get => _registeredDataStructs; }
+
 
         #endregion
     }

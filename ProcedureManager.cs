@@ -5,7 +5,6 @@ using PilotAssistModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using uPLibrary.Networking.M2Mqtt.Messages;
 
@@ -24,6 +23,8 @@ namespace SimConnectModule
         private static bool _procedureCompleted;
         private static bool _stopProcedureLoop = false;
         private static string _mqttClientId;
+
+        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         #endregion
 
@@ -113,6 +114,7 @@ namespace SimConnectModule
         {
             if (e.Topic == MqttTopics.ServerReceiveTopics[MqttTopics.ServerReceive.RequestAvailableProcedures])
             {
+                log.Info("Available procedures request received");
                 SendAvailableProcedures();
                 return;
             }
@@ -126,10 +128,16 @@ namespace SimConnectModule
 
                 if (activeProcedure != null)
                 {
+                    log.Info($"Procedure {activeProcedure.InvokeName} found.");
                     await ActivateProcedure(activeProcedure);
+                }
+                else
+                {
+                    log.Warn("Procedure received via MQTT not found.");
                 }
                 return;
             }
+            log.Info(e);
         }
 
         /// <summary>
@@ -137,18 +145,24 @@ namespace SimConnectModule
         /// </summary>
         private static void SendAvailableProcedures()
         {
-            foreach(Procedure p in Procedure.AllItems)
+            
+            string topic = MqttTopics.ServerPublishTopics[MqttTopics.ServerPublish.AvailableProcedures];
+            int proceduresSent = 0;
+            foreach (Procedure p in Procedure.AllItems)
             {
                 p.SetModelStruct();
                 byte[] msg = ModelSerializer.StrucToByteArray(p.Model);
-                MqttManager.Client.Publish(MqttTopics.ServerPublishTopics[MqttTopics.ServerPublish.AvailableProcedures], msg);
+                MqttManager.Client.Publish(topic, msg);
+                proceduresSent++;
             }
+            log.Info($"{proceduresSent} procedures published to {topic} via broker {MqttManager.BrokerAddress}");
         }
 
         public async static Task ActivateProcedure(Procedure procedure)
         {
             if (procedure.Items.Count == 0)
             {
+                log.Warn($"Procedure {procedure.InvokeName} has zero items in its Items Collection.");
                 throw new ArgumentException($"The procedure {procedure.Name} has zero items in it's Items collection and can't be monitored.");
             }
 
@@ -172,7 +186,7 @@ namespace SimConnectModule
             }
             catch(Exception e)
             {
-
+                log.Error($"Error while registering data structs for {procedure.InvokeName}. Error: {e.Message}");
             }
         }
 
@@ -183,15 +197,11 @@ namespace SimConnectModule
             _stopProcedureLoop = true;
         }
 
-        private static async Task<bool> StartProcedureLoop()
+        private static async Task ProcedureLoop()
         {
-            _activeItemIndex = 0;
-            ActiveItem = ActiveProcedure.Items[_activeItemIndex];
-
             while (!_stopProcedureLoop && !_procedureCompleted)
             {
-                ScManagedLib.RequestSimData((SIMVAR_CATEGORY)_activeItem.SimVar.Category);
-                
+
                 if (_activeItem.SimVar.Assert(_activeItem.Target))
                 {
                     if (_activeItemIndex == ActiveProcedure.Items.Count - 1)
@@ -209,12 +219,34 @@ namespace SimConnectModule
 
                 // Lower the frequency of the loop to avoid false positives,
                 // For example if the thrust lever passes through the desired target value.
-                await Task.Delay(500);
+                await Task.Delay(200);
             }
+
+            // ScManagedLib.StopDataRequestLoop();
 
             _stopProcedureLoop = false;
 
             ActiveProcedure = null;
+
+            ActiveItem = null;
+
+            _latestItemSent = null;
+        }
+
+        private static async Task<bool> StartProcedureLoop()
+        {
+            _activeItemIndex = 0;
+            ActiveItem = ActiveProcedure.Items[_activeItemIndex];
+            SendActiveItem();
+
+            _stopProcedureLoop = false;
+
+            if (!ScManagedLib.IsDataRequestLoopActive())
+            {
+                // await ScManagedLib.StartDataRequestLoop();
+            }
+
+            await ProcedureLoop();
 
             return false;
         }
