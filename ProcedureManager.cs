@@ -18,7 +18,7 @@ namespace SimConnectModule
         private static ProcedureItem _activeItem;
         private static ProcedureItem _latestItemSent;
         private static object _activeItemValue;
-        private static int _activeItemIndex;
+        private static int _activeItemIndex = -1;
 
         private static bool _procedureCompleted;
         private static bool _stopProcedureLoop = false;
@@ -137,6 +137,11 @@ namespace SimConnectModule
                 }
                 return;
             }
+
+            if (e.Topic == MqttTopics.ServerReceiveTopics[MqttTopics.ServerReceive.ActivateNextItem])
+            {
+                ForceNextItem();
+            }
             log.Info(e);
         }
 
@@ -201,7 +206,6 @@ namespace SimConnectModule
         {
             while (!_stopProcedureLoop && !_procedureCompleted)
             {
-
                 if (_activeItem.SimVar.Assert(_activeItem.Target))
                 {
                     if (_activeItemIndex == ActiveProcedure.Items.Count - 1)
@@ -212,7 +216,7 @@ namespace SimConnectModule
                     else
                     {
                         ActiveItem = ActiveProcedure.Items[++_activeItemIndex];
-                        await Task.Delay(1000);
+                        await Task.Delay(1500);
                         SendActiveItem();
                     }
                 }
@@ -222,14 +226,10 @@ namespace SimConnectModule
                 await Task.Delay(200);
             }
 
-            // ScManagedLib.StopDataRequestLoop();
-
             _stopProcedureLoop = false;
-
+            _activeItemIndex = -1;
             ActiveProcedure = null;
-
             ActiveItem = null;
-
             _latestItemSent = null;
         }
 
@@ -259,6 +259,16 @@ namespace SimConnectModule
                 MqttManager.PublishDataStruct<ProcedureItemStruct>(ActiveItem.Model, MqttTopics.ServerPublishTopics[MqttTopics.ServerPublish.ActiveProcedureItem]);
                 _latestItemSent = ActiveItem;
             }
+        }
+
+        private static void ForceNextItem()
+        {
+            if (_activeItemIndex == -1) return;
+            if (ActiveProcedure == null) return;
+            if (_activeItemIndex >= ActiveProcedure.Items.Count) return;
+
+            ActiveItem = ActiveProcedure.Items[++_activeItemIndex];
+            SendActiveItem();
         }
 
         #endregion
