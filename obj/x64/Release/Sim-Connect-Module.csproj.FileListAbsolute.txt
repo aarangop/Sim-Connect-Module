@@ -1,2 +1,0 @@
-C:\Users\arang\source\repos\Sim-Connect-Module\obj\x64\Release\Sim-Connect-Module.csprojAssemblyReference.cache
-C:\Users\arang\source\repos\Sim-Connect-Module\obj\x64\Release\Sim-Connect-Module.csproj.CoreCompileInputs.cache
