@@ -29,6 +29,9 @@ namespace SimConnectModule
                     SimulationVariable.SetValue(_monitoredSimVars["BRAKE PARKING INDICATOR"], controlsData.BRAKE_PARKING_INDICATOR);
                     SimulationVariable.SetValue(_monitoredSimVars["BRAKE PARKING POSITION"], controlsData.BRAKE_PARKING_POSITION);
                     break;
+
+                case SIMVAR_CATEGORY.OTHER:
+                    break;
             }
         }
     }

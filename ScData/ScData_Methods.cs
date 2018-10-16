@@ -19,7 +19,7 @@ namespace SimConnectModule
         public async static Task RegisterStruct(SimConnect sc, SIMVAR_CATEGORY cat)
         {
             // Don't proceed with registration if the struct was already registered
-            if (_registeredDataStructs.ContainsKey(cat)) return;
+            // if (_registeredDataStructs.ContainsKey(cat)) return;
 
             // Register the struct that corresponds to the SIMVAR_CATEGORY and return it's type.
             Type structType = SimConnectRegisterDataDefineStruct(sc, cat);
@@ -30,6 +30,9 @@ namespace SimConnectModule
             {
                 fields = new List<FieldInfo>(structType.GetFields(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public));
             }
+
+            // Return when there is no struct associated with this category.
+            if (fields == null) return;
 
             // Loop struct fields and add the corresponding variables to the Data Definition
             for (int i = 0; i < fields.Count; i++)

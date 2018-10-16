@@ -94,6 +94,14 @@ namespace SimConnectModule
             MqttManager.Client.Publish(MqttTopics.ServerPublishTopics[MqttTopics.ServerPublish.ProcedureCompleted], msg);
         }
 
+        private static void DeactivateActiveProcedure()
+        {
+            _activeItemIndex = -1;
+            ActiveProcedure = null;
+            ActiveItem = null;
+            _latestItemSent = null;
+        }
+
         private static void MqttManager_ConnectionStatusChanged(object sender, ConnectionChangedEventArgs e)
         {
             if (MqttManager.Client == null) return;
@@ -206,7 +214,7 @@ namespace SimConnectModule
         {
             while (!_stopProcedureLoop && !_procedureCompleted)
             {
-                if (_activeItem.SimVar.Assert(_activeItem.Target))
+                if (await _activeItem.SimVar.Assert(_activeItem.Target))
                 {
                     if (_activeItemIndex == ActiveProcedure.Items.Count - 1)
                     {
@@ -220,17 +228,15 @@ namespace SimConnectModule
                         SendActiveItem();
                     }
                 }
-
+                
                 // Lower the frequency of the loop to avoid false positives,
                 // For example if the thrust lever passes through the desired target value.
-                await Task.Delay(200);
+                await Task.Delay(500);
             }
 
             _stopProcedureLoop = false;
-            _activeItemIndex = -1;
-            ActiveProcedure = null;
-            ActiveItem = null;
-            _latestItemSent = null;
+
+            DeactivateActiveProcedure();
         }
 
         private static async Task<bool> StartProcedureLoop()
@@ -240,11 +246,6 @@ namespace SimConnectModule
             SendActiveItem();
 
             _stopProcedureLoop = false;
-
-            if (!ScManagedLib.IsDataRequestLoopActive())
-            {
-                // await ScManagedLib.StartDataRequestLoop();
-            }
 
             await ProcedureLoop();
 
@@ -265,10 +266,21 @@ namespace SimConnectModule
         {
             if (_activeItemIndex == -1) return;
             if (ActiveProcedure == null) return;
-            if (_activeItemIndex >= ActiveProcedure.Items.Count) return;
 
-            ActiveItem = ActiveProcedure.Items[++_activeItemIndex];
-            SendActiveItem();
+            _activeItemIndex++;
+
+            if (_activeItemIndex > ActiveProcedure.Items.Count - 1)
+            {
+                // Complete procedure
+                _procedureCompleted = true;
+                OnProcedureCompleted?.Invoke(ActiveProcedure);
+            }
+            else
+            {
+                ActiveItem = ActiveProcedure.Items[_activeItemIndex];
+                SendActiveItem();
+            }
+
         }
 
         #endregion
