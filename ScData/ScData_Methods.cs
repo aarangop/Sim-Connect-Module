@@ -19,7 +19,7 @@ namespace SimConnectModule
         public async static Task RegisterStruct(SimConnect sc, SIMVAR_CATEGORY cat)
         {
             // Don't proceed with registration if the struct was already registered
-            // if (_registeredDataStructs.ContainsKey(cat)) return;
+            if (_registeredDataStructs.ContainsKey(cat)) return;
 
             // Register the struct that corresponds to the SIMVAR_CATEGORY and return it's type.
             Type structType = SimConnectRegisterDataDefineStruct(sc, cat);

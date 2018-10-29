@@ -262,7 +262,7 @@ namespace SimConnectModule
             }
         }
 
-        private static void ForceNextItem()
+        public static void ForceNextItem()
         {
             if (_activeItemIndex == -1) return;
             if (ActiveProcedure == null) return;
