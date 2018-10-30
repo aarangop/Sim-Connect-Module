@@ -55,5 +55,9 @@ namespace SimConnectModule
             public bool BRAKE_PARKING_POSITION;
         }
         #endregion
+
+        #region Aircraft Flight Instrumentation Data
+
+        #endregion
     }
 }

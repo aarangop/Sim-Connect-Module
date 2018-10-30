@@ -1,4 +1,5 @@
 ﻿using PilotAssistDll.Models;
+using PilotAssistModels;
 using System.Collections.Generic;
 
 namespace SimConnectModule
@@ -33,6 +34,7 @@ namespace SimConnectModule
         /// </summary>
         public static Dictionary<SIMVAR_CATEGORY, bool> RegisteredDataStructs { get => _registeredDataStructs; }
 
+        public static AircraftFlightInstrumentationData ACInstrData;
 
         #endregion
     }

@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using LockheedMartin.Prepar3D.SimConnect;
+using PilotAssistDll.Helpers;
+using PilotAssistModels;
 
 namespace SimConnectModule
 {
@@ -16,6 +18,7 @@ namespace SimConnectModule
         private static IntPtr _windowHandle;
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         private static bool _stopDataRequestLoop = true;
+        private static bool _sendingHudData = false;
 
         #endregion
 
@@ -31,6 +34,8 @@ namespace SimConnectModule
         public static int WM_USER_SIMCONNECT { get => _WM_USER_SIMCONNECT; }
 
         public static SimConnect SimConnectInstance { get => _simConnect; }
+
+        public static bool SendingHudData { get => _sendingHudData; }
 
         #endregion
 
@@ -175,9 +180,26 @@ namespace SimConnectModule
             }
         }
 
-        public static async Task DataRequestLoop()
+        public static void StartHudDataStream()
         {
+            OnRecvData += SendHudData;
+            _sendingHudData = true;
+        }
 
+        public static void StopHudDataStream()
+        {
+            OnRecvData -= SendHudData;
+            _sendingHudData = false;
+        }
+
+        public static void SendHudData(object obj, SimConnectDataRecvArgs args)
+        {
+            if (!MqttManager.Client.IsConnected || !_sendingHudData) return;
+
+            byte[] msg =  ModelSerializer.StrucToByteArray(ScData.ACInstrData);
+
+            MqttManager.Client.Publish(MqttTopics.ServerPublishTopics[MqttTopics.ServerPublish.HudData], msg);
+            
         }
 
         public static void StopDataRequestLoop()
@@ -195,6 +217,7 @@ namespace SimConnectModule
             await ScData.RegisterStruct(_simConnect, SIMVAR_CATEGORY.ENGINE_DATA);
             await ScData.RegisterStruct(_simConnect, SIMVAR_CATEGORY.AIRCRAFT_MISCELANEOUS);
             await ScData.RegisterStruct(_simConnect, SIMVAR_CATEGORY.CONTROLS);
+            await ScData.RegisterStruct(_simConnect, SIMVAR_CATEGORY.FLIGHT_INSTRUMENTATION);
         }
 
         public static void RequestSimData(SIMVAR_CATEGORY category)

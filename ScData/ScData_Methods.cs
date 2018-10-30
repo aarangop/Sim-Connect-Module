@@ -1,6 +1,7 @@
 ﻿using LockheedMartin.Prepar3D.SimConnect;
 using MongoDB.Driver;
 using PilotAssistDll.Models;
+using PilotAssistModels;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -131,6 +132,11 @@ namespace SimConnectModule
                 case SIMVAR_CATEGORY.CONTROLS:
                     retType = typeof(AircraftControlsDataStruct);
                     sc.RegisterDataDefineStruct<AircraftControlsDataStruct>(cat);
+                    break;
+
+                case SIMVAR_CATEGORY.FLIGHT_INSTRUMENTATION:
+                    retType = typeof(AircraftFlightInstrumentationData);
+                    sc.RegisterDataDefineStruct<AircraftFlightInstrumentationData>(cat);
                     break;
 
                 case SIMVAR_CATEGORY.CREW_INPUT_VARIABLE:
