@@ -55,5 +55,13 @@ namespace SimConnectModule
             public bool BRAKE_PARKING_POSITION;
         }
         #endregion
+
+        #region Aircraft Flight Instrumentation Data
+        // This struct lives in Pilot-Assist-Models since it has to be used in the HoloLens too.
+        #endregion
+
+        #region Aircraft Landing Gear Data
+
+        #endregion
     }
 }

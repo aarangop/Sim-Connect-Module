@@ -1,6 +1,7 @@
 ﻿using LockheedMartin.Prepar3D.SimConnect;
 using MongoDB.Driver;
 using PilotAssistDll.Models;
+using PilotAssistModels;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -19,7 +20,7 @@ namespace SimConnectModule
         public async static Task RegisterStruct(SimConnect sc, SIMVAR_CATEGORY cat)
         {
             // Don't proceed with registration if the struct was already registered
-            // if (_registeredDataStructs.ContainsKey(cat)) return;
+            if (_registeredDataStructs.ContainsKey(cat)) return;
 
             // Register the struct that corresponds to the SIMVAR_CATEGORY and return it's type.
             Type structType = SimConnectRegisterDataDefineStruct(sc, cat);
@@ -30,6 +31,9 @@ namespace SimConnectModule
             {
                 fields = new List<FieldInfo>(structType.GetFields(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public));
             }
+
+            // Return when there is no struct associated with this category.
+            if (fields == null) return;
 
             // Loop struct fields and add the corresponding variables to the Data Definition
             for (int i = 0; i < fields.Count; i++)
@@ -76,7 +80,7 @@ namespace SimConnectModule
             }
 
             // Add the added variable category to the dictionary of registered structs
-            // _registeredDataStructs.Add(cat, true);
+            _registeredDataStructs.Add(cat, true);
         }
 
         private static SIMCONNECT_DATATYPE GetSimConnectDataType(Type t)
@@ -130,6 +134,11 @@ namespace SimConnectModule
                     sc.RegisterDataDefineStruct<AircraftControlsDataStruct>(cat);
                     break;
 
+                case SIMVAR_CATEGORY.FLIGHT_INSTRUMENTATION:
+                    retType = typeof(AircraftFlightInstrumentationData);
+                    sc.RegisterDataDefineStruct<AircraftFlightInstrumentationData>(cat);
+                    break;
+
                 case SIMVAR_CATEGORY.CREW_INPUT_VARIABLE:
                 case SIMVAR_CATEGORY.OTHER:
                     // The category CREW_INPUT_VARIABLE and OTHER is not registered in simconnect.
@@ -138,6 +147,17 @@ namespace SimConnectModule
             }
 
             return retType;
+        }
+
+        internal static void RequestDataAllDataStructs(SimConnect sc, int userId)
+        {
+            foreach(KeyValuePair<SIMVAR_CATEGORY, bool> category in _registeredDataStructs)
+            {
+                if (category.Value)
+                {
+                    sc.RequestDataOnSimObject(category.Key, category.Key, SimConnect.SIMCONNECT_OBJECT_ID_USER, SIMCONNECT_PERIOD.SIM_FRAME, SIMCONNECT_DATA_REQUEST_FLAG.DEFAULT, 0, 0, 0);
+                }
+            }
         }
     }
 }

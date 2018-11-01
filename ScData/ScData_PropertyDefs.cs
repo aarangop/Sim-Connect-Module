@@ -1,4 +1,5 @@
 ﻿using LockheedMartin.Prepar3D.SimConnect;
+using System;
 using System.Collections.Generic;
 
 namespace SimConnectModule
@@ -26,11 +27,16 @@ namespace SimConnectModule
             new PropertyDef("BRAKE PARKING POSITION", "Parking Brake Position", null, SIMCONNECT_DATATYPE.FLOAT64)
         };
 
-        private static Dictionary<SIMVAR_CATEGORY, List<PropertyDef>> _propertyDefs = new Dictionary<SIMVAR_CATEGORY, List<PropertyDef>>()
+        private static List<PropertyDef> _aircraftFlightInstrumentationDataPropDefs = new List<PropertyDef>()
         {
-            //{ SIMVAR_CATEGORY.ENGINE_DATA, _engineDataPropDefs },
-            //{ SIMVAR_CATEGORY.AIRCRAFT_MISCELANEOUS, _aircraftMiscelaneousDataPropDefs },
-            //{ SIMVAR_CATEGORY.CONTROLS, _aircraftControlsDataPropDefs }
+            new PropertyDef("ATTITUDE INDICATOR PITCH DEGREES", "Pitch Angle", "degrees", SIMCONNECT_DATATYPE.FLOAT64),
+            new PropertyDef("ATTITUDE INDICATOR BANK DEGREES", "Bank Angle", "degrees", SIMCONNECT_DATATYPE.FLOAT64),
+            new PropertyDef("WISKEY COMPASS INDICATION DEGREES", "Heading", "degrees", SIMCONNECT_DATATYPE.FLOAT64),
+            new PropertyDef("INDICATED ALTITUDE", "Altitude", "Feet", SIMCONNECT_DATATYPE.FLOAT64),
+            new PropertyDef("AIRSPEED INDICATED", "IAS", "Knots", SIMCONNECT_DATATYPE.FLOAT64),
+            new PropertyDef("VERTICAL SPEED", "Vertical Speed", "Feet per second", SIMCONNECT_DATATYPE.FLOAT64)
         };
+
+        private static Dictionary<SIMVAR_CATEGORY, List<PropertyDef>> _propertyDefs = new Dictionary<SIMVAR_CATEGORY, List<PropertyDef>>(){};
     }
 }

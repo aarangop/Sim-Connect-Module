@@ -9,9 +9,9 @@ namespace SimConnectModule
 {
     public class SimConnectDataRecvArgs
     {
-        public SIMCONNECT_RECV RecvData;
+        public SIMCONNECT_RECV_SIMOBJECT_DATA RecvData;
 
-        public SimConnectDataRecvArgs(SIMCONNECT_RECV recvData)
+        public SimConnectDataRecvArgs(SIMCONNECT_RECV_SIMOBJECT_DATA recvData)
         {
             RecvData = recvData;
         }
