@@ -24,7 +24,9 @@ namespace SimConnectModule
         private static List<PropertyDef> _aircraftControlsDataPropDefs = new List<PropertyDef>()
         {
             new PropertyDef("BRAKE PARKING INDICATOR", "Parking Brake Indicator", null, SIMCONNECT_DATATYPE.FLOAT64),
-            new PropertyDef("BRAKE PARKING POSITION", "Parking Brake Position", null, SIMCONNECT_DATATYPE.FLOAT64)
+            new PropertyDef("BRAKE PARKING POSITION", "Parking Brake Position", null, SIMCONNECT_DATATYPE.FLOAT64),
+            new PropertyDef("FLAPS HANDLE PERCENT", "Flaps pct", "Percent", SIMCONNECT_DATATYPE.FLOAT32),
+            new PropertyDef("FLAPS HANDLE INDEX", "Flaps", null, SIMCONNECT_DATATYPE.FLOAT32)
         };
 
         private static List<PropertyDef> _aircraftFlightInstrumentationDataPropDefs = new List<PropertyDef>()
@@ -35,6 +37,11 @@ namespace SimConnectModule
             new PropertyDef("INDICATED ALTITUDE", "Altitude", "Feet", SIMCONNECT_DATATYPE.FLOAT64),
             new PropertyDef("AIRSPEED INDICATED", "IAS", "Knots", SIMCONNECT_DATATYPE.FLOAT64),
             new PropertyDef("VERTICAL SPEED", "Vertical Speed", "Feet per second", SIMCONNECT_DATATYPE.FLOAT64)
+        };
+
+        private static List<PropertyDef> _aircraftLandingGearDataPropDefs = new List<PropertyDef>()
+        {
+            new PropertyDef("GEAR TOTAL PCT EXTENDED", "Gear Extension", "Percentage", SIMCONNECT_DATATYPE.FLOAT32)
         };
 
         private static Dictionary<SIMVAR_CATEGORY, List<PropertyDef>> _propertyDefs = new Dictionary<SIMVAR_CATEGORY, List<PropertyDef>>(){};

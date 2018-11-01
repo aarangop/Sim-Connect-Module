@@ -29,11 +29,12 @@ namespace SimConnectModule
                     AircraftControlsDataStruct controlsData = (AircraftControlsDataStruct)data;
                     SimulationVariable.SetValue(_monitoredSimVars["BRAKE PARKING INDICATOR"], controlsData.BRAKE_PARKING_INDICATOR);
                     SimulationVariable.SetValue(_monitoredSimVars["BRAKE PARKING POSITION"], controlsData.BRAKE_PARKING_POSITION);
+                    SimulationVariable.SetValue(_monitoredSimVars["FLAPS HANDLE PERCENT"], controlsData.FLAPS_HANDLE_PERCENT);
+                    SimulationVariable.SetValue(_monitoredSimVars["FLAPS HANDLE INDEX"], controlsData.FLAPS_HANDLE_INDEX);
                     break;
 
                 case SIMVAR_CATEGORY.FLIGHT_INSTRUMENTATION:
                     AircraftFlightInstrumentationData instrData = (AircraftFlightInstrumentationData)data;
-
                     SimulationVariable.SetValue(_monitoredSimVars["ATTITUDE INDICATOR PITCH DEGREES"], instrData.ATTITUDE_INDICATOR_PITCH_DEGREES);
                     SimulationVariable.SetValue(_monitoredSimVars["ATTITUDE INDICATOR BANK DEGREES"], instrData.ATTITUDE_INDICATOR_BANK_DEGREES);
                     SimulationVariable.SetValue(_monitoredSimVars["WISKEY COMPASS INDICATION DEGREES"], instrData.WISKEY_COMPASS_INDICATION_DEGREES);
@@ -43,6 +44,11 @@ namespace SimConnectModule
 
                     ACInstrData = instrData;
 
+                    break;
+
+                case SIMVAR_CATEGORY.LANDING_GEAR:
+                    AircraftLandingGearDataStruct gearData = (AircraftLandingGearDataStruct)data;
+                    SimulationVariable.SetValue(_monitoredSimVars["GEAR TOTAL PCT EXTENDED"], (float)(Math.Truncate(gearData.GEAR_TOTAL_PCT_EXTENDED * 10000) / 10000));
                     break;
 
                 case SIMVAR_CATEGORY.OTHER:

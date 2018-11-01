@@ -139,6 +139,11 @@ namespace SimConnectModule
                     sc.RegisterDataDefineStruct<AircraftFlightInstrumentationData>(cat);
                     break;
 
+                case SIMVAR_CATEGORY.LANDING_GEAR:
+                    retType = typeof(AircraftLandingGearDataStruct);
+                    sc.RegisterDataDefineStruct<AircraftLandingGearDataStruct>(cat);
+                    break;
+
                 case SIMVAR_CATEGORY.CREW_INPUT_VARIABLE:
                 case SIMVAR_CATEGORY.OTHER:
                     // The category CREW_INPUT_VARIABLE and OTHER is not registered in simconnect.
@@ -155,7 +160,7 @@ namespace SimConnectModule
             {
                 if (category.Value)
                 {
-                    sc.RequestDataOnSimObject(category.Key, category.Key, SimConnect.SIMCONNECT_OBJECT_ID_USER, SIMCONNECT_PERIOD.SIM_FRAME, SIMCONNECT_DATA_REQUEST_FLAG.DEFAULT, 0, 0, 0);
+                    sc.RequestDataOnSimObject(category.Key, category.Key, SimConnect.SIMCONNECT_OBJECT_ID_USER, SIMCONNECT_PERIOD.VISUAL_FRAME, SIMCONNECT_DATA_REQUEST_FLAG.DEFAULT, 0, 0, 0);
                 }
             }
         }

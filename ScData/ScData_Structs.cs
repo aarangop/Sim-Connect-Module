@@ -53,6 +53,8 @@ namespace SimConnectModule
         {
             public bool BRAKE_PARKING_INDICATOR;
             public bool BRAKE_PARKING_POSITION;
+            public double FLAPS_HANDLE_PERCENT;
+            public double FLAPS_HANDLE_INDEX;
         }
         #endregion
 
@@ -61,7 +63,11 @@ namespace SimConnectModule
         #endregion
 
         #region Aircraft Landing Gear Data
-
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi, Pack = 1)]
+        public struct AircraftLandingGearDataStruct
+        {
+            public double GEAR_TOTAL_PCT_EXTENDED;
+        }
         #endregion
     }
 }

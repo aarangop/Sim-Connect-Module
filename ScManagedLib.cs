@@ -218,6 +218,7 @@ namespace SimConnectModule
             await ScData.RegisterStruct(_simConnect, SIMVAR_CATEGORY.AIRCRAFT_MISCELANEOUS);
             await ScData.RegisterStruct(_simConnect, SIMVAR_CATEGORY.CONTROLS);
             await ScData.RegisterStruct(_simConnect, SIMVAR_CATEGORY.FLIGHT_INSTRUMENTATION);
+            await ScData.RegisterStruct(_simConnect, SIMVAR_CATEGORY.LANDING_GEAR);
         }
 
         public static void RequestSimData(SIMVAR_CATEGORY category)
